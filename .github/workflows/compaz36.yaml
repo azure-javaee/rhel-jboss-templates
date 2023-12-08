@@ -75,3 +75,5 @@ jobs:
                 inlineScript: |
                     # create a storage account
                     az storage account create --name ${{ env.domainBootStorageAccountName }} --resource-group ${{ env.dependencyResourceGroup }} --access-tier hot --allow-blob-public-access true --assign-identity --enable-local-user --kind BlobStorage --sku Standard_LRS
+                    # create a container
+                    az storage container create --name cafeapp --public-access container --account-name ${{ env.domainBootStorageAccountName }}
