@@ -67,6 +67,15 @@ jobs:
             - name: Create Resource Group
               run: |
                 az group create -n ${{ env.dependencyResourceGroup}} -l ${{ env.location }}
+            - name: Build javaee cafe
+              run: |
+                if ${{ env.enableDB != 'true' }}; then
+                  sed -i "s/java:jboss\/datasources\/JavaEECafeDB/java:jboss\/datasources\/ExampleDS/g" rhel-jboss-templates/eap-coffee-app/src/main/resources/META-INF/persistence.xml
+                fi
+                mvn clean install --file rhel-jboss-templates/eap-coffee-app/pom.xml
+                if ${{ env.enableDB != 'true' }}; then
+                  sed -i "s/java:jboss\/datasources\/ExampleDS/java:jboss\/datasources\/JavaEECafeDB/g" rhel-jboss-templates/eap-coffee-app/src/main/resources/META-INF/persistence.xml
+                fi
             - name: Create a container and uploading cafe app
               id: upload_cafe_app
               uses: azure/CLI@v1
@@ -77,3 +86,9 @@ jobs:
                     az storage account create --name ${{ env.domainBootStorageAccountName }} --resource-group ${{ env.dependencyResourceGroup }} --access-tier hot --allow-blob-public-access true --assign-identity --enable-local-user --kind BlobStorage --sku Standard_LRS
                     # create a container
                     az storage container create --name cafeapp --public-access container --account-name ${{ env.domainBootStorageAccountName }}
+                    # upload cafe app
+                    az storage blob upload \
+                      --account-name ${{ env.domainBootStorageAccountName }} \
+                      --container-name cafeapp \
+                      --name javaee-cafe.war \
+                      --file rhel-jboss-templates/eap-coffee-app/target/javaee-cafe.war
