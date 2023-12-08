@@ -100,11 +100,10 @@ jobs:
                     connectionString=$(az storage account show-connection-string --name ${{ env.domainBootStorageAccountName }} \
                       --resource-group ${{ env.dependencyResourceGroup }} --query connectionString -o tsv)
                     echo "connectionString=${connectionString}" >> $GITHUB_ENV
-                    echo "connectionString=${connectionString}" >> $GITHUB_OUTPUT                    
                     # upload cafe app
                     az storage blob upload \
                       --account-name ${{ env.domainBootStorageAccountName }} \
-                      --connection-string ${{ env.connectionString }} \
+                      --connection-string "${connectionString}" \
                       --container-name cafeapp \
                       --file rhel-jboss-templates/eap-coffee-app/target/javaee-cafe.war \
                       --name javaee-cafe.war 
