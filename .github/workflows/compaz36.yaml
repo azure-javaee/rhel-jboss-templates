@@ -50,92 +50,12 @@ env:
 
 jobs:
     preflight:
-        outputs:
-          isForDemo: ${{ steps.setup-env-variables-based-on-dispatch-event.outputs.isForDemo }}
         runs-on: ubuntu-latest
         steps:
-            - name: Get versions of external dependencies
-              run: |
-                curl -Lo external-deps-versions.properties https://raw.githubusercontent.com/Azure/azure-javaee-iaas/main/external-deps-versions.properties
-                source external-deps-versions.properties
-                echo "azCliVersion=${AZ_CLI_VERSION}" >> $GITHUB_ENV
-                echo "bicepVersion=${BICEP_VERSION}" >> $GITHUB_ENV
-                echo "refArmttk=${ARM_TTK_REFERENCE}" >> $GITHUB_ENV
-                echo "refJavaee=9850b0ba70d705479b66967a1311ecae145c6b30" >> $GITHUB_ENV
             - uses: azure/login@v1
               id: azure-login
               with:
                 creds: ${{ env.azureCredentials }}
-            - name: Accept Image Terms
-              id: accept-terms
-              run: |
-                  echo "accept terms for VM image"
-                  az vm image terms accept --urn redhat:rh-jboss-eap:rh-jboss-eap74-rhel8:latest
-            - name: Create Resource Group
-              run: |
-                az group create -n ${{ env.dependencyResourceGroup}} -l ${{ env.location }}
-            - name: Set up JDK 11
-              uses: actions/setup-java@v3
-              with:
-                distribution: 'temurin'
-                java-version: '11'
-            - name: Set up bicep
-              run: |
-                curl -Lo bicep https://github.com/Azure/bicep/releases/download/${{ env.bicepVersion }}/bicep-linux-x64
-                chmod +x ./bicep
-                sudo mv ./bicep /usr/local/bin/bicep
-                bicep --version
-            - name: Checkout azure-javaee-iaas
-              uses: actions/checkout@v3
-              with:
-                repository: Azure/azure-javaee-iaas
-                path: azure-javaee-iaas
-                ref: 9850b0ba70d705479b66967a1311ecae145c6b30
-            - name: Checkout arm-ttk
-              uses: actions/checkout@v3
-              with:
-                repository: Azure/arm-ttk
-                path: arm-ttk
-                ref: ${{ env.refArmttk }}
-            - name: Build azure-javaee-iaas
-              run: mvn -DskipTests clean install --file azure-javaee-iaas/pom.xml
-            - name: Checkout rhel-jboss-templates
-              uses: actions/checkout@v3
-              with:
-                repository: ${{env.gitUserName}}/rhel-jboss-templates
-                path: rhel-jboss-templates
-            - name: Build and test rhel-jboss-templates
-              run: |
-                mvn -Pbicep -Passembly clean install -Ptemplate-validation-tests --file rhel-jboss-templates/eap74-rhel8-payg-multivm/pom.xml
-            - name: Generate artifact file name and path
-              id: artifact_file
-              run: |
-                multivmVersion=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec --file rhel-jboss-templates/eap74-rhel8-payg-multivm/pom.xml)
-                multivmArtifactName=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.artifactId}' --non-recursive exec:exec --file rhel-jboss-templates/eap74-rhel8-payg-multivm/pom.xml)
-                multivmArtifactName=${multivmArtifactName}-${multivmVersion}-arm-assembly
-                unzip rhel-jboss-templates/eap74-rhel8-payg-multivm/target/${multivmArtifactName}.zip -d rhel-jboss-templates/eap74-rhel8-payg-multivm/target/${multivmArtifactName}
-                echo "multivmArtifactName=${multivmArtifactName}" >> "$GITHUB_OUTPUT"
-                echo "multivmArtifactPath=rhel-jboss-templates/eap74-rhel8-payg-multivm/target/${multivmArtifactName}" >> "$GITHUB_OUTPUT"
-            - name: Archive rhel-jboss-templates eap74-rhel8-payg-multivm offer templates
-              uses: actions/upload-artifact@v3
-              if: success()
-              with:
-                name: ${{steps.artifact_file.outputs.multivmArtifactName}}
-                path: ${{steps.artifact_file.outputs.multivmArtifactPath}}
-            - name: Setup environment variables
-              id: setup-env-variables-based-on-dispatch-event
-              run: |
-                isForDemo=${{ github.event.inputs.isForDemo }}
-                echo "isForDemo=${isForDemo}" >> "$GITHUB_OUTPUT"
-            - name: Build javaee cafe
-              run: |
-                if ${{ env.enableDB != 'true' }}; then
-                  sed -i "s/java:jboss\/datasources\/JavaEECafeDB/java:jboss\/datasources\/ExampleDS/g" rhel-jboss-templates/eap-coffee-app/src/main/resources/META-INF/persistence.xml
-                fi
-                mvn clean install --file rhel-jboss-templates/eap-coffee-app/pom.xml
-                if ${{ env.enableDB != 'true' }}; then
-                  sed -i "s/java:jboss\/datasources\/ExampleDS/java:jboss\/datasources\/JavaEECafeDB/g" rhel-jboss-templates/eap-coffee-app/src/main/resources/META-INF/persistence.xml
-                fi
             - name: Create a container and uploading cafe app
               id: upload_cafe_app
               uses: azure/CLI@v1
@@ -143,18 +63,4 @@ jobs:
                 azcliversion: ${{ env.azCliVersion }}
                 inlineScript: |
                     # create a storage account
-                    az storage account create --name ${{ env.domainBootStorageAccountName }} --resource-group ${{ env.dependencyResourceGroup }} --auth-mode login --access-tier hot --allow-blob-public-access true --assign-identity --enable-local-user --kind BlobStorage
-                    # create a container
-                    az storage container create --name cafeapp --public-access container --account-name ${{ env.domainBootStorageAccountName }}
-                    # upload cafe app
-                    az storage blob upload \
-                      --account-name ${{ env.domainBootStorageAccountName }} \
-                      --container-name cafeapp \
-                      --name javaee-cafe.war \
-                      --file rhel-jboss-templates/eap-coffee-app/target/javaee-cafe.war
-                    # query the app url
-                    appbloburl=$(az storage blob url --container-name cafeapp \
-                        --name javaee-cafe.war \
-                        --account-name ${{ env.domainBootStorageAccountName }} -o tsv)
-                    
-                    echo "appbloburl=${appbloburl}" >> "$GITHUB_OUTPUT"
+                    az storage account create --name ${{ env.domainBootStorageAccountName }} --resource-group ${{ env.dependencyResourceGroup }} --access-tier hot --allow-blob-public-access true --assign-identity --enable-local-user --kind BlobStorage --sku Standard_LRS
