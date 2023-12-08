@@ -98,7 +98,7 @@ jobs:
                     az storage container create --name cafeapp --public-access container --account-name ${{ env.domainBootStorageAccountName }}
                     # get the connection string
                     connectionString=$(az storage account show-connection-string --name ${{ env.domainBootStorageAccountName }} \
-                      --resource-group ${{ env.dependencyResourceGroup }})
+                      --resource-group ${{ env.dependencyResourceGroup }} --query connectionString -o tsv)
                     echo "connectionString=${connectionString}" >> $GITHUB_ENV
                     echo "connectionString=${connectionString}" >> $GITHUB_OUTPUT                    
                     # upload cafe app
