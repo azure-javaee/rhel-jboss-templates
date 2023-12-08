@@ -52,6 +52,14 @@ jobs:
     preflight:
         runs-on: ubuntu-latest
         steps:
+            - name: Get versions of external dependencies
+              run: |
+                curl -Lo external-deps-versions.properties https://raw.githubusercontent.com/Azure/azure-javaee-iaas/main/external-deps-versions.properties
+                source external-deps-versions.properties
+                echo "azCliVersion=${AZ_CLI_VERSION}" >> $GITHUB_ENV
+                echo "bicepVersion=${BICEP_VERSION}" >> $GITHUB_ENV
+                echo "refArmttk=${ARM_TTK_REFERENCE}" >> $GITHUB_ENV
+                echo "refJavaee=9850b0ba70d705479b66967a1311ecae145c6b30" >> $GITHUB_ENV
             - uses: azure/login@v1
               id: azure-login
               with:
