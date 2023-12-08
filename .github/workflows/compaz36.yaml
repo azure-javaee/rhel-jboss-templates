@@ -1,4 +1,4 @@
-name: Validate payg-multivm offer
+name: COMPAZ-36
 
 on:
   workflow_dispatch:
