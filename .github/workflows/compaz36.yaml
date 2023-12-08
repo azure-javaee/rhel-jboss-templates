@@ -99,6 +99,7 @@ jobs:
                     # upload cafe app
                     az storage blob upload \
                       --account-name ${{ env.domainBootStorageAccountName }} \
+                      --auth-mode login \
                       --container-name cafeapp \
-                      --name javaee-cafe.war \
-                      --file rhel-jboss-templates/eap-coffee-app/target/javaee-cafe.war
+                      --file rhel-jboss-templates/eap-coffee-app/target/javaee-cafe.war \
+                      --name javaee-cafe.war 
