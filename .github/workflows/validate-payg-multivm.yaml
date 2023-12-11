@@ -377,12 +377,17 @@ jobs:
                     az storage account create --name ${{ env.domainBootStorageAccountName }} --resource-group ${{ env.dependencyResourceGroup }} --access-tier hot --allow-blob-public-access true --assign-identity --enable-local-user --kind BlobStorage --sku Standard_LRS
                     # create a container
                     az storage container create --name cafeapp --public-access container --account-name ${{ env.domainBootStorageAccountName }}
+                    # get the connection string
+                    connectionString=$(az storage account show-connection-string --name ${{ env.domainBootStorageAccountName }} \
+                      --resource-group ${{ env.dependencyResourceGroup }} --query connectionString -o tsv)
+                    echo "connectionString=${connectionString}" >> $GITHUB_ENV
                     # upload cafe app
                     az storage blob upload \
                       --account-name ${{ env.domainBootStorageAccountName }} \
+                      --connection-string "${connectionString}" \
                       --container-name cafeapp \
-                      --name javaee-cafe.war \
-                      --file rhel-jboss-templates/eap-coffee-app/target/javaee-cafe.war
+                      --file rhel-jboss-templates/eap-coffee-app/target/javaee-cafe.war \
+                      --name javaee-cafe.war
                     # query the app url
                     appbloburl=$(az storage blob url --container-name cafeapp \
                         --name javaee-cafe.war \
