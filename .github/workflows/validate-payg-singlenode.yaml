@@ -79,6 +79,11 @@ jobs:
         needs: preflight
         runs-on: ubuntu-latest
         steps:
+            - name: Setup tmate session
+              uses: mxschmitt/action-tmate@v3
+              timeout-minutes: 120
+              with:
+                detached: true
             - name: Checkout rhel-jboss-templates
               uses: actions/checkout@v4
               with:
