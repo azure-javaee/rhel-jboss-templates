@@ -12,9 +12,6 @@ if ! rpm -qa | grep firewalld 2>&1 > /dev/null ; then
     sudo systemctl enable firewalld
 fi
 
-## Update JBoss EAP to use latest patch.
-sudo yum update -y | log; flag=${PIPESTATUS[0]}
-
 openport() {
     port=$1
 
