@@ -12,6 +12,10 @@ if ! rpm -qa | grep firewalld 2>&1 > /dev/null ; then
     sudo systemctl enable firewalld
 fi
 
+sudo yum clean all | log; flag=${PIPESTATUS[0]}
+sudo yum makecache | log; flag=${PIPESTATUS[0]}
+sudo yum update -y | log; flag=${PIPESTATUS[0]}
+
 openport() {
     port=$1
 
