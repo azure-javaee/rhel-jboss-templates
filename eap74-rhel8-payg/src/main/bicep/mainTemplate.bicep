@@ -296,10 +296,7 @@ resource vmName_resource 'Microsoft.Compute/virtualMachines@${azure.apiVersionFo
       adminUsername: adminUsername
       adminPassword: adminPasswordOrSSHKey
       linuxConfiguration: ((authenticationType == 'password') ? json('null') : linuxConfiguration)
-      customData: base64('#cloud-config
-                          runcmd:
-                            - yum update -y
-                         ')
+      customData: 'I2Nsb3VkLWNvbmZpZwpydW5jbWQ6CiAgIC0geXVtIHVwZGF0ZSAteQ=='
     }
     storageProfile: {
       imageReference: {
