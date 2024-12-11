@@ -296,7 +296,7 @@ resource vmName_resource 'Microsoft.Compute/virtualMachines@${azure.apiVersionFo
       adminUsername: adminUsername
       adminPassword: adminPasswordOrSSHKey
       linuxConfiguration: ((authenticationType == 'password') ? json('null') : linuxConfiguration)
-      customData: base64('sudo yum update -y > /var/log/jbosseap.install.log')
+      customData: base64('sudo yum update -y > /var/log/jbosseap.install2.log')
     }
     storageProfile: {
       imageReference: {
