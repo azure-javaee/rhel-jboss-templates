@@ -160,6 +160,7 @@ var customData = '''
 #cloud-config
 runcmd:
   - sudo yum update -y
+  - sudo systemctl restart waagent
 '''
 
 /*
