@@ -7,7 +7,7 @@ log() {
 }
 
 sudo yum clean packages | log; flag=${PIPESTATUS[0]}
-sudo yum update -y --disablerepo=*WALinuxAgent* | log; flag=${PIPESTATUS[0]}
+sudo yum update -y --exclude=*WALinuxAgent* | log; flag=${PIPESTATUS[0]}
 
 # firewalld installation and configuration
 if ! rpm -qa | grep firewalld 2>&1 > /dev/null ; then
