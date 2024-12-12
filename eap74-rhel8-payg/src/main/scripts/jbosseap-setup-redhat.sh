@@ -8,9 +8,8 @@ log() {
 
 FLAG_FILE="/var/log/cloud-init-done-flag"
 echo "waiting for cloud-init to finish..."  | log; flag=${PIPESTATUS[0]}
-while [ ! -f "$FLAG_FILE" ]
-do
-  sleep 10
+while [ ! -f "$FLAG_FILE" ]; do
+    sleep 10
 done
 echo "cloud-init has finished."  | log; flag=${PIPESTATUS[0]}
 rm -f "$FLAG_FILE"
