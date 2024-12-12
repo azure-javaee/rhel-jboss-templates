@@ -6,6 +6,7 @@ log() {
     done
 }
 
+sudo systemctl restart waagent | log; flag=${PIPESTATUS[0]}
 sudo yum update -y | log; flag=${PIPESTATUS[0]}
 
 # firewalld installation and configuration
