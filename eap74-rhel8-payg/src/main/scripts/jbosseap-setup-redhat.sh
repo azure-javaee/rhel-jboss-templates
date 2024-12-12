@@ -12,8 +12,9 @@ while [ ! -f "$FLAG_FILE" ]; do
     sleep 30
     echo "Sleeping for 30 seconds to wait for cloud-init to finish..."  | log; flag=${PIPESTATUS[0]}
 done
+
 echo "cloud-init has finished."  | log; flag=${PIPESTATUS[0]}
-rm -f "$FLAG_FILE"
+sudo rm -f "$FLAG_FILE"
 
 # firewalld installation and configuration
 if ! rpm -qa | grep firewalld 2>&1 > /dev/null ; then
