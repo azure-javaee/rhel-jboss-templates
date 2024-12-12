@@ -5,8 +5,8 @@ log() {
         printf '%s %s\n' "$(date "+%Y-%m-%d %H:%M:%S")" "$line" >> /var/log/jbosseap.install.log
     done
 }
-echo "cloud-init status --wait" | log; flag=${PIPESTATUS[0]}
-cloud-init status --wait | log; flag=${PIPESTATUS[0]}
+echo "sudo cloud-init status --wait" | log; flag=${PIPESTATUS[0]}
+sudo cloud-init status --wait | log; flag=${PIPESTATUS[0]}
 
 # firewalld installation and configuration
 if ! rpm -qa | grep firewalld 2>&1 > /dev/null ; then
