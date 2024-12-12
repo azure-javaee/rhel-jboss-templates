@@ -6,7 +6,8 @@ log() {
     done
 }
 
-sudo yum update -y | log; flag=${PIPESTATUS[0]}
+sudo yum clean packages | log; flag=${PIPESTATUS[0]}
+sudo yum update -y --debuglevel=2 | log; flag=${PIPESTATUS[0]}
 
 # firewalld installation and configuration
 if ! rpm -qa | grep firewalld 2>&1 > /dev/null ; then
