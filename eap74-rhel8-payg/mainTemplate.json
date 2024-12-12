@@ -1,0 +1,1376 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.30.23.60470",
+      "templateHash": "9541037546616420920"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources"
+      }
+    },
+    "vmName": {
+      "type": "string",
+      "defaultValue": "jbosseapVm",
+      "metadata": {
+        "description": "Name for the Virtual Machine."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "jbossuser",
+      "metadata": {
+        "description": "Linux VM user account name"
+      }
+    },
+    "vmPublicIPAddressName": {
+      "type": "string",
+      "defaultValue": "jbosseapVm-ip",
+      "metadata": {
+        "description": "Public IP Name for the VM"
+      }
+    },
+    "dnsNameforVM": {
+      "type": "string",
+      "defaultValue": "[format('jbossvm{0}', take(uniqueString(utcNow()), 6))]",
+      "metadata": {
+        "description": "DNS prefix for VM"
+      }
+    },
+    "authenticationType": {
+      "type": "string",
+      "defaultValue": "password",
+      "allowedValues": [
+        "password",
+        "sshPublicKey"
+      ],
+      "metadata": {
+        "description": "Type of authentication to use on the Virtual Machine"
+      }
+    },
+    "adminPasswordOrSSHKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password or SSH key for the Virtual Machine"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B1ms",
+      "metadata": {
+        "description": "The size of the Virtual Machine"
+      }
+    },
+    "jdkVersion": {
+      "type": "string",
+      "defaultValue": "eap8-openjdk17",
+      "metadata": {
+        "description": "The JDK version of the Virtual Machine"
+      }
+    },
+    "bootDiagnostics": {
+      "type": "string",
+      "defaultValue": "on",
+      "allowedValues": [
+        "off",
+        "on"
+      ],
+      "metadata": {
+        "description": "Capture serial console outputs and screenshots of the virtual machine running on a host to help diagnose startup issues"
+      }
+    },
+    "storageNewOrExisting": {
+      "type": "string",
+      "defaultValue": "New",
+      "metadata": {
+        "description": "Determines whether or not a new storage account should be provisioned."
+      }
+    },
+    "existingStorageAccount": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the existing Storage Account Name"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "[format('storage{0}', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "Name of the storage account"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Storage account type"
+      }
+    },
+    "storageAccountKind": {
+      "type": "string",
+      "defaultValue": "Storage",
+      "metadata": {
+        "description": "Storage account kind"
+      }
+    },
+    "storageAccountResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Name of the resource group for the existing storage account"
+      }
+    },
+    "virtualNetworkNewOrExisting": {
+      "type": "string",
+      "defaultValue": "new",
+      "metadata": {
+        "description": "Determines whether or not a new virtual network should be provisioned."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "VirtualNetwork",
+      "metadata": {
+        "description": "Name of the virtual network"
+      }
+    },
+    "addressPrefixes": {
+      "type": "array",
+      "defaultValue": [
+        "10.0.0.0/28"
+      ],
+      "metadata": {
+        "description": "Address prefix of the virtual network"
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "defaultValue": "default",
+      "metadata": {
+        "description": "Name of the subnet"
+      }
+    },
+    "subnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/29",
+      "metadata": {
+        "description": "Subnet prefix of the virtual network"
+      }
+    },
+    "virtualNetworkResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Name of the resource group for the existing virtual network"
+      }
+    },
+    "jbossEAPUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "User name for JBoss EAP Manager"
+      }
+    },
+    "jbossEAPPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for JBoss EAP Manager"
+      }
+    },
+    "gracefulShutdownTimeout": {
+      "type": "string",
+      "metadata": {
+        "description": "Please enter a Graceful Shutdown Timeout in seconds"
+      }
+    },
+    "artifactsLocation": {
+      "type": "string",
+      "defaultValue": "[deployment().properties.templateLink.uri]",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated"
+      }
+    },
+    "artifactsLocationSasToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated"
+      }
+    },
+    "connectSatellite": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Connect to an existing Red Hat Satellite Server."
+      }
+    },
+    "satelliteActivationKey": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "Red Hat Satellite Server activation key."
+      }
+    },
+    "satelliteOrgName": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "Red Hat Satellite Server organization name."
+      }
+    },
+    "satelliteFqdn": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "Red Hat Satellite Server VM FQDN name."
+      }
+    },
+    "enableDB": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Boolean value indicating, if user wants to enable database connection."
+      }
+    },
+    "databaseType": {
+      "type": "string",
+      "defaultValue": "postgresql",
+      "allowedValues": [
+        "mssqlserver",
+        "postgresql",
+        "oracle",
+        "mysql"
+      ],
+      "metadata": {
+        "description": "One of the supported database types"
+      }
+    },
+    "jdbcDataSourceJNDIName": {
+      "type": "string",
+      "defaultValue": "jdbc/contoso",
+      "metadata": {
+        "description": "JNDI Name for JDBC Datasource"
+      }
+    },
+    "dsConnectionURL": {
+      "type": "string",
+      "defaultValue": "jdbc:postgresql://contoso.postgres.database:5432/testdb",
+      "metadata": {
+        "description": "JDBC Connection String"
+      }
+    },
+    "dbUser": {
+      "type": "string",
+      "defaultValue": "contosoDbUser",
+      "metadata": {
+        "description": "User id of Database"
+      }
+    },
+    "dbPassword": {
+      "type": "securestring",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "Password for Database"
+      }
+    },
+    "guidValue": {
+      "type": "string",
+      "defaultValue": "[take(replace(newGuid(), '-', ''), 6)]"
+    }
+  },
+  "variables": {
+    "nicName_var": "[format('{0}-nic', uniqueString(resourceGroup().id))]",
+    "networkSecurityGroupName_var": "jbosseap-nsg",
+    "bootDiagnosticsCheck": "[and(equals(parameters('storageNewOrExisting'), 'New'), equals(parameters('bootDiagnostics'), 'on'))]",
+    "bootStorageName_var": "[if(equals(parameters('storageNewOrExisting'), 'Existing'), parameters('existingStorageAccount'), parameters('storageAccountName'))]",
+    "linuxConfiguration": {
+      "disablePasswordAuthentication": true,
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
+            "keyData": "[parameters('adminPasswordOrSSHKey')]"
+          }
+        ]
+      }
+    },
+    "name_postDeploymentDsName": "[format('updateNicPrivateIpStatic{0}', parameters('guidValue'))]",
+    "name_vmAcceptTerms": "[format('vmAcceptTerms{0}', parameters('guidValue'))]",
+    "plan": {
+      "publisher": "redhat",
+      "product": "rh-jboss-eap",
+      "name": "[if(equals(parameters('jdkVersion'), 'eap74-openjdk8'), 'rh-jboss-eap74-jdk8-rhel8', if(equals(parameters('jdkVersion'), 'eap74-openjdk11'), 'rh-jboss-eap74-jdk11-rhel8', if(equals(parameters('jdkVersion'), 'eap74-openjdk17'), 'rh-jboss-eap74-jdk17-rhel8', if(equals(parameters('jdkVersion'), 'eap8-openjdk11'), 'rh-jboss-eap8-jdk11-rhel9-gen2', if(equals(parameters('jdkVersion'), 'eap8-openjdk17'), 'rh-jboss-eap8-jdk17-rhel9-gen2', null())))))]"
+    }
+  },
+  "resources": [
+    {
+      "condition": "[variables('bootDiagnosticsCheck')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('bootStorageName_var')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('storageAccountType')]"
+      },
+      "kind": "[parameters('storageAccountKind')]"
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-04-01",
+      "name": "[variables('networkSecurityGroupName_var')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 510,
+              "direction": "Inbound",
+              "destinationPortRanges": [
+                "80",
+                "443",
+                "9990",
+                "8080"
+              ]
+            },
+            "name": "ALLOW_HTTP_ACCESS"
+          }
+        ]
+      }
+    },
+    {
+      "condition": "[equals(parameters('virtualNetworkNewOrExisting'), 'new')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-04-01",
+      "name": "[parameters('virtualNetworkName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": "[parameters('addressPrefixes')]"
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName_var'))]"
+              }
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName_var'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-04-01",
+      "name": "[variables('nicName_var')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName_var'))]"
+        },
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets/', parameters('virtualNetworkName'), parameters('subnetName'))]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vmPublicIPAddressName'))]"
+              }
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName_var'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2024-03-01",
+      "name": "[parameters('vmName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPasswordOrSSHKey')]",
+          "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "RedHat",
+            "offer": "rh-jboss-eap",
+            "sku": "[if(equals(parameters('jdkVersion'), 'eap74-openjdk8'), 'rh-jboss-eap74-jdk8-rhel8', if(equals(parameters('jdkVersion'), 'eap74-openjdk11'), 'rh-jboss-eap74-jdk11-rhel8', if(equals(parameters('jdkVersion'), 'eap74-openjdk17'), 'rh-jboss-eap74-jdk17-rhel8', if(equals(parameters('jdkVersion'), 'eap8-openjdk11'), 'rh-jboss-eap8-jdk11-rhel9-gen2', if(equals(parameters('jdkVersion'), 'eap8-openjdk17'), 'rh-jboss-eap8-jdk17-rhel9-gen2', null())))))]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[format('{0}_OSDisk', parameters('vmName'))]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName_var'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": "[if(equals(parameters('bootDiagnostics'), 'on'), json(format('{{\"bootDiagnostics\": {{\"enabled\": true,\"storageUri\": \"{0}\"}}}}', reference(resourceId(parameters('storageAccountResourceGroupName'), 'Microsoft.Storage/storageAccounts/', variables('bootStorageName_var')), '2021-06-01').primaryEndpoints.blob)), json('{\"bootDiagnostics\": {\"enabled\": false}}'))]"
+      },
+      "plan": "[variables('plan')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('bootStorageName_var'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName_var'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName_var'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vmPublicIPAddressName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-04-01",
+      "name": "[parameters('vmPublicIPAddressName')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('dnsNameforVM')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}/{1}', parameters('vmName'), 'jbosseap-setup-extension')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[uri(parameters('artifactsLocation'), format('scripts/jbosseap-setup-redhat.sh{0}', parameters('artifactsLocationSasToken')))]",
+            "[uri(parameters('artifactsLocation'), format('scripts/create-ds-postgresql.sh{0}', parameters('artifactsLocationSasToken')))]",
+            "[uri(parameters('artifactsLocation'), format('scripts/create-ds-mssqlserver.sh{0}', parameters('artifactsLocationSasToken')))]",
+            "[uri(parameters('artifactsLocation'), format('scripts/create-ds-oracle.sh{0}', parameters('artifactsLocationSasToken')))]",
+            "[uri(parameters('artifactsLocation'), format('scripts/create-ds-mysql.sh{0}', parameters('artifactsLocationSasToken')))]"
+          ]
+        },
+        "protectedSettings": {
+          "commandToExecute": "[format('sh jbosseap-setup-redhat.sh ''{0}'' ''{1}'' ''{2}'' ''{3}'' ''{4}'' ''{5}'' ''{6}'' ''{7}'' ''{8}'' ''{9}'' ''{10}'' ''{11}'' ''{12}'' ''{13}''', parameters('jbossEAPUserName'), base64(parameters('jbossEAPPassword')), parameters('connectSatellite'), base64(parameters('satelliteActivationKey')), base64(parameters('satelliteOrgName')), parameters('satelliteFqdn'), parameters('jdkVersion'), parameters('enableDB'), parameters('databaseType'), base64(parameters('jdbcDataSourceJNDIName')), base64(parameters('dsConnectionURL')), base64(parameters('dbUser')), base64(parameters('dbPassword')), parameters('gracefulShutdownTimeout'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "initialization",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "11634870262138637682"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "pid"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[not(equals(parameters('name'), 'pid'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "14276079886145786764"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "This is an empty deployment"
+                    }
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "value": "[parameters('name')]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "dbEnd": {
+              "type": "string",
+              "value": "b742ad57-826f-5a4f-981f-eb4d152c3c21"
+            },
+            "dbStart": {
+              "type": "string",
+              "value": "fc3c1d44-5bb6-56af-bc0f-9e6c1d5bf810"
+            },
+            "paygSingleEnd": {
+              "type": "string",
+              "value": "13bfd1d1-d616-42b1-b109-4dd815273f53"
+            },
+            "paygSingleStart": {
+              "type": "string",
+              "value": "618fb513-a80a-42c4-946f-e39319fcc353"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "pid-e9412731-57c2-4e6a-9825-061ad30337c0-partnercenter",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {},
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "14276079886145786764"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "This is an empty deployment"
+            }
+          },
+          "resources": [],
+          "outputs": {
+            "name": {
+              "type": "string",
+              "value": "[parameters('name')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "uami-deployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "3651953190881631986"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "name_deploymentScriptContributorRoleAssignmentName": {
+              "type": "string",
+              "defaultValue": "[newGuid()]"
+            }
+          },
+          "variables": {
+            "const_roleDefinitionIdOfContributor": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+            "name_deploymentScriptUserDefinedManagedIdentity": "[format('jboss-eap-vm-deployment-script-user-defined-managed-itentity-{0}', substring(uniqueString(parameters('name_deploymentScriptContributorRoleAssignmentName')), 0, 5))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2023-01-31",
+              "name": "[variables('name_deploymentScriptUserDefinedManagedIdentity')]",
+              "location": "[parameters('location')]"
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[parameters('name_deploymentScriptContributorRoleAssignmentName')]",
+              "subscriptionId": "[subscription().subscriptionId]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "roleDefinitionId": {
+                    "value": "[variables('const_roleDefinitionIdOfContributor')]"
+                  },
+                  "principalId": {
+                    "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('name_deploymentScriptUserDefinedManagedIdentity'))).principalId]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "10048635442037581544"
+                    }
+                  },
+                  "parameters": {
+                    "roleDefinitionId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "principalId": {
+                      "type": "string",
+                      "defaultValue": ""
+                    }
+                  },
+                  "variables": {
+                    "name_roleAssignmentName": "[guid(format('{0}{1}Role assignment in subscription scope', subscription().id, parameters('principalId')))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Authorization/roleAssignments",
+                      "apiVersion": "2022-04-01",
+                      "name": "[variables('name_roleAssignmentName')]",
+                      "properties": {
+                        "description": "Assign subscription scope role to User Assigned Managed Identity ",
+                        "principalId": "[parameters('principalId')]",
+                        "principalType": "ServicePrincipal",
+                        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "uamiIdForDeploymentScript": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('name_deploymentScriptUserDefinedManagedIdentity'))]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "paygSingleStartPid",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'initialization'), '2022-09-01').outputs.paygSingleStart.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "11634870262138637682"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "pid"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[not(equals(parameters('name'), 'pid'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "14276079886145786764"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "This is an empty deployment"
+                    }
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "value": "[parameters('name')]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "dbEnd": {
+              "type": "string",
+              "value": "b742ad57-826f-5a4f-981f-eb4d152c3c21"
+            },
+            "dbStart": {
+              "type": "string",
+              "value": "fc3c1d44-5bb6-56af-bc0f-9e6c1d5bf810"
+            },
+            "paygSingleEnd": {
+              "type": "string",
+              "value": "13bfd1d1-d616-42b1-b109-4dd815273f53"
+            },
+            "paygSingleStart": {
+              "type": "string",
+              "value": "618fb513-a80a-42c4-946f-e39319fcc353"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'initialization')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('name_vmAcceptTerms')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[variables('name_vmAcceptTerms')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "_artifactsLocation": {
+            "value": "[parameters('artifactsLocation')]"
+          },
+          "_artifactsLocationSasToken": {
+            "value": "[parameters('artifactsLocationSasToken')]"
+          },
+          "identity": {
+            "value": {
+              "type": "UserAssigned",
+              "userAssignedIdentities": {
+                "[format('{0}', reference(resourceId('Microsoft.Resources/deployments', 'uami-deployment'), '2022-09-01').outputs.uamiIdForDeploymentScript.value)]": {}
+              }
+            }
+          },
+          "plan": {
+            "value": "[variables('plan')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "18064394386309720259"
+            }
+          },
+          "parameters": {
+            "_artifactsLocation": {
+              "type": "string",
+              "defaultValue": "[deployment().properties.templateLink.uri]"
+            },
+            "_artifactsLocationSasToken": {
+              "type": "securestring",
+              "defaultValue": ""
+            },
+            "location": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "identity": {
+              "type": "object",
+              "defaultValue": {}
+            },
+            "plan": {
+              "type": "object",
+              "defaultValue": {}
+            },
+            "utcValue": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            }
+          },
+          "variables": {
+            "const_scriptLocation": "[uri(parameters('_artifactsLocation'), 'scripts/')]",
+            "urn": "[format('{0}:{1}:{2}', parameters('plan').publisher, parameters('plan').product, parameters('plan').name)]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[parameters('name')]",
+              "location": "[parameters('location')]",
+              "kind": "AzureCLI",
+              "identity": "[parameters('identity')]",
+              "properties": {
+                "azCliVersion": "2.41.0",
+                "environmentVariables": [
+                  {
+                    "name": "URN",
+                    "value": "[variables('urn')]"
+                  }
+                ],
+                "primaryScriptUri": "[uri(variables('const_scriptLocation'), format('vm-accept-terms.sh{0}', parameters('_artifactsLocationSasToken')))]",
+                "cleanupPreference": "OnSuccess",
+                "retentionInterval": "P1D",
+                "forceUpdateTag": "[parameters('utcValue')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName_var'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'uami-deployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[if(equals(parameters('jdkVersion'), 'eap74-openjdk8'), 'rh-jboss-eap74-jdk8-rhel8', if(equals(parameters('jdkVersion'), 'eap74-openjdk11'), 'rh-jboss-eap74-jdk11-rhel8', if(equals(parameters('jdkVersion'), 'eap74-openjdk17'), 'rh-jboss-eap74-jdk17-rhel8', if(equals(parameters('jdkVersion'), 'eap8-openjdk11'), 'rh-jboss-eap8-jdk11-rhel9-gen2', if(equals(parameters('jdkVersion'), 'eap8-openjdk17'), 'rh-jboss-eap8-jdk17-rhel9-gen2', null())))))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {},
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "14276079886145786764"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "This is an empty deployment"
+            }
+          },
+          "resources": [],
+          "outputs": {
+            "name": {
+              "type": "string",
+              "value": "[parameters('name')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "condition": "[parameters('enableDB')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "dbConnectionStartPid",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'initialization'), '2022-09-01').outputs.dbStart.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "11634870262138637682"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "pid"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[not(equals(parameters('name'), 'pid'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "14276079886145786764"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "This is an empty deployment"
+                    }
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "value": "[parameters('name')]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "dbEnd": {
+              "type": "string",
+              "value": "b742ad57-826f-5a4f-981f-eb4d152c3c21"
+            },
+            "dbStart": {
+              "type": "string",
+              "value": "fc3c1d44-5bb6-56af-bc0f-9e6c1d5bf810"
+            },
+            "paygSingleEnd": {
+              "type": "string",
+              "value": "13bfd1d1-d616-42b1-b109-4dd815273f53"
+            },
+            "paygSingleStart": {
+              "type": "string",
+              "value": "618fb513-a80a-42c4-946f-e39319fcc353"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'initialization')]",
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('name_postDeploymentDsName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[variables('name_postDeploymentDsName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "_artifactsLocation": {
+            "value": "[parameters('artifactsLocation')]"
+          },
+          "_artifactsLocationSasToken": {
+            "value": "[parameters('artifactsLocationSasToken')]"
+          },
+          "identity": {
+            "value": {
+              "type": "UserAssigned",
+              "userAssignedIdentities": {
+                "[format('{0}', reference(resourceId('Microsoft.Resources/deployments', 'uami-deployment'), '2022-09-01').outputs.uamiIdForDeploymentScript.value)]": {}
+              }
+            }
+          },
+          "resourceGroupName": {
+            "value": "[resourceGroup().name]"
+          },
+          "nicName": {
+            "value": "[variables('nicName_var')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "15279156682491719220"
+            }
+          },
+          "parameters": {
+            "_artifactsLocation": {
+              "type": "string",
+              "defaultValue": "[deployment().properties.templateLink.uri]"
+            },
+            "_artifactsLocationSasToken": {
+              "type": "securestring",
+              "defaultValue": ""
+            },
+            "location": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "identity": {
+              "type": "object",
+              "defaultValue": {}
+            },
+            "resourceGroupName": {
+              "type": "string"
+            },
+            "nicName": {
+              "type": "string"
+            },
+            "utcValue": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            }
+          },
+          "variables": {
+            "const_scriptLocation": "[uri(parameters('_artifactsLocation'), 'scripts/')]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[parameters('name')]",
+              "location": "[parameters('location')]",
+              "kind": "AzureCLI",
+              "identity": "[parameters('identity')]",
+              "properties": {
+                "azCliVersion": "2.41.0",
+                "environmentVariables": [
+                  {
+                    "name": "RESOURCE_GROUP_NAME",
+                    "value": "[parameters('resourceGroupName')]"
+                  },
+                  {
+                    "name": "NIC_NAME",
+                    "value": "[parameters('nicName')]"
+                  }
+                ],
+                "primaryScriptUri": "[uri(variables('const_scriptLocation'), format('post-deployment.sh{0}', parameters('_artifactsLocationSasToken')))]",
+                "cleanupPreference": "OnSuccess",
+                "retentionInterval": "P1D",
+                "forceUpdateTag": "[parameters('utcValue')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName_var'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'uami-deployment')]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableDB')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "dbConnectionEndPid",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'initialization'), '2022-09-01').outputs.dbEnd.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "11634870262138637682"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "pid"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[not(equals(parameters('name'), 'pid'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "14276079886145786764"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "This is an empty deployment"
+                    }
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "value": "[parameters('name')]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "dbEnd": {
+              "type": "string",
+              "value": "b742ad57-826f-5a4f-981f-eb4d152c3c21"
+            },
+            "dbStart": {
+              "type": "string",
+              "value": "fc3c1d44-5bb6-56af-bc0f-9e6c1d5bf810"
+            },
+            "paygSingleEnd": {
+              "type": "string",
+              "value": "13bfd1d1-d616-42b1-b109-4dd815273f53"
+            },
+            "paygSingleStart": {
+              "type": "string",
+              "value": "618fb513-a80a-42c4-946f-e39319fcc353"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'initialization')]",
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'), 'jbosseap-setup-extension')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "paygSingleEndPid",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'initialization'), '2022-09-01').outputs.paygSingleEnd.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "11634870262138637682"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "pid"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[not(equals(parameters('name'), 'pid'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "14276079886145786764"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "This is an empty deployment"
+                    }
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "value": "[parameters('name')]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "dbEnd": {
+              "type": "string",
+              "value": "b742ad57-826f-5a4f-981f-eb4d152c3c21"
+            },
+            "dbStart": {
+              "type": "string",
+              "value": "fc3c1d44-5bb6-56af-bc0f-9e6c1d5bf810"
+            },
+            "paygSingleEnd": {
+              "type": "string",
+              "value": "13bfd1d1-d616-42b1-b109-4dd815273f53"
+            },
+            "paygSingleStart": {
+              "type": "string",
+              "value": "618fb513-a80a-42c4-946f-e39319fcc353"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'dbConnectionEndPid')]",
+        "[resourceId('Microsoft.Resources/deployments', 'initialization')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "appHttpURL": {
+      "type": "string",
+      "value": "[uri(format('http://{0}:8080/', reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('vmPublicIPAddressName')), '2023-04-01').dnsSettings.fqdn), '')]"
+    },
+    "appHttpsURL": {
+      "type": "string",
+      "value": "[uri(format('https://{0}:8080/', reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('vmPublicIPAddressName')), '2023-04-01').dnsSettings.fqdn), '')]"
+    },
+    "adminConsole": {
+      "type": "string",
+      "value": "[uri(format('http://{0}:9990/', reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('vmPublicIPAddressName')), '2023-04-01').dnsSettings.fqdn), '')]"
+    },
+    "adminUsername": {
+      "type": "string",
+      "value": "[parameters('jbossEAPUserName')]"
+    }
+  }
+}
