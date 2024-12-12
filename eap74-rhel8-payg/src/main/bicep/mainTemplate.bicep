@@ -159,7 +159,7 @@ var plan = {
 var customData = '''
 #cloud-config
 runcmd:
-  - yum update -y
+  - sudo yum update -y && echo "done" > /var/log/cloud-init-done-flag
 '''
 
 /*
