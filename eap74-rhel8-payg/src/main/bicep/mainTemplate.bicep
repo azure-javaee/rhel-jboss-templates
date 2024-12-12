@@ -156,6 +156,12 @@ var plan = {
   name: (jdkVersion == 'eap74-openjdk8') ? 'rh-jboss-eap74-jdk8-rhel8' : (jdkVersion == 'eap74-openjdk11') ? 'rh-jboss-eap74-jdk11-rhel8' : (jdkVersion == 'eap74-openjdk17') ? 'rh-jboss-eap74-jdk17-rhel8' :  (jdkVersion == 'eap8-openjdk11') ? 'rh-jboss-eap8-jdk11-rhel9-gen2' :  (jdkVersion == 'eap8-openjdk17') ? 'rh-jboss-eap8-jdk17-rhel9-gen2' :  null
 }
 
+var customData = '''
+#cloud-config
+runcmd:
+  - yum update -y
+'''
+
 /*
 * Beginning of the offer deployment
 */
@@ -296,7 +302,7 @@ resource vmName_resource 'Microsoft.Compute/virtualMachines@${azure.apiVersionFo
       adminUsername: adminUsername
       adminPassword: adminPasswordOrSSHKey
       linuxConfiguration: ((authenticationType == 'password') ? json('null') : linuxConfiguration)
-      customData: 'I2Nsb3VkLWNvbmZpZwpydW5jbWQ6CiAgIC0geXVtIHVwZGF0ZSAteQ=='
+      customData: base64(customData)
     }
     storageProfile: {
       imageReference: {
