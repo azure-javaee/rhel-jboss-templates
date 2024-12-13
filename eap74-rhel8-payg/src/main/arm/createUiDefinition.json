@@ -702,5 +702,12 @@
             "dbUser": "[steps('section_database').databaseConnectionInfo.dbUser]",
             "dbPassword": "[steps('section_database').databaseConnectionInfo.dbPassword]"
         }
+    },
+    "config": {
+        "basics": {
+            "resourceGroup": {
+                "allowExisting": true
+            }
+        }
     }
 }
