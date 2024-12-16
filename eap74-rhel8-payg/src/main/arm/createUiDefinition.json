@@ -3,6 +3,13 @@
     "handler": "Microsoft.Azure.CreateUIDef",
     "version": "0.1.2-preview",
     "parameters": {
+        "config": {
+            "basics": {
+                "resourceGroup": {
+                    "allowExisting": true
+                }
+            }
+        },
         "basics": [
             {
                 "name": "vmSize",
@@ -701,13 +708,6 @@
             "dsConnectionURL": "[if(equals(steps('section_database').databaseConnectionInfo.databaseType, 'oracle'), steps('section_database').databaseConnectionInfo.oracleDsConnectionURL, if(equals(steps('section_database').databaseConnectionInfo.databaseType, 'mysql'), steps('section_database').databaseConnectionInfo.mysqlDsConnectionURL, if(equals(steps('section_database').databaseConnectionInfo.databaseType, 'postgresql'), steps('section_database').databaseConnectionInfo.postgresDsConnectionURL, steps('section_database').databaseConnectionInfo.sqlserverDsConnectionURL)))]",
             "dbUser": "[steps('section_database').databaseConnectionInfo.dbUser]",
             "dbPassword": "[steps('section_database').databaseConnectionInfo.dbPassword]"
-        }
-    },
-    "config": {
-        "basics": {
-            "resourceGroup": {
-                "allowExisting": true
-            }
         }
     }
 }
