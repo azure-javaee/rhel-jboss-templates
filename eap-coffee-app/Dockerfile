@@ -18,7 +18,10 @@ FROM registry.redhat.io/jboss-eap-8/eap8-openjdk17-runtime-openshift-rhel8:lates
 # Set appropriate ownership and permissions.
 COPY --from=builder --chown=jboss:root $JBOSS_HOME $JBOSS_HOME
 
-COPY --chown=jboss:root target/javaee-cafe.war $JBOSS_HOME/standalone/deployments/
+# Rename the WAR file
+RUN mv target/javaee-cafe.war target/ROOT.war
+
+COPY --chown=jboss:root target/ROOT.war $JBOSS_HOME/standalone/deployments/
 
 # Ensure appropriate permissions for the copied files.
 RUN chmod -R ug+rwX $JBOSS_HOME
