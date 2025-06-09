@@ -80,7 +80,7 @@
               <layers>
                 <layer>cloud-server</layer>
               </layers>
-              <filename>ROOT.war</filename>
+              <filename>javaee-cafe.war</filename>
             </configuration>
             <executions>
               <execution>
