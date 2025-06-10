@@ -56,11 +56,20 @@ jobs:
           dbInstanceName: ${{ env.dbInstanceName }}
           dbPassword: ${{ env.dbPassword }}
           scriptLocation: ${{env.scriptLocation}}
+      - name: Get database parameters
+        id: database-parameters
+        uses: ./.github/actions/database-parameters
+        with:
+          databaseType: ${{ inputs.databaseType }}
+          uamiId: ${{ steps.database-provision.outputs.uamiId }}
+          serverHost: ${{ steps.database-provision.outputs.serverHost }}
+          dbInstanceName: ${{ env.dbInstanceName }}
 
       - name: Set outputs
         run: |
           echo "serverHost=${{ steps.dabase-provision.outputs.serverHost }}" 
           echo "uamiId=${{ steps.dabase-provision.outputs.uamiId }}"
+          echo dbIdentity=${{ steps.database-parameters.outputs.dbIdentity }}
       - name: delete resource group
         run: |
           az group delete -n ${{ env.resourceGroup }} --yes --no-wait
