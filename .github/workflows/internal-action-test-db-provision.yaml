@@ -1,5 +1,5 @@
-name: Test db provision
-run-name:  Test db provision with `db`:${{ inputs.databaseType }}
+name: Internal Action Test Database provision
+run-name:  Test database provision with `db`:${{ inputs.databaseType }}
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ on:
 env:
   azureCredentials: ${{ secrets.AZURE_CREDENTIALS_BYOS }}
   location: eastus2
-  resourceGroup: test-db-provision-dep-${{ github.repository_owner }}-${{ github.run_id }}-${{ github.run_number }}
+  resourceGroup: test-db-provision-${{ github.repository_owner }}-${{ github.run_id }}-${{ github.run_number }}
   password: ${{ secrets.VM_PASSWORD }}
   dbInstanceName: db${{ github.run_id }}${{ github.run_number }}
   dbPassword: ${{ secrets.DATABASE_PASSWORD }}
