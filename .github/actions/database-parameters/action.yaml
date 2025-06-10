@@ -63,6 +63,8 @@ runs:
           dsConnectionURL="jdbc:sqlserver://$serverHost:1433;database=testdb"
           enablePasswordless=true
           dbUser=$(basename "$uamiId")
+          echo "dbUser=$dbUser"
+          echo "uamiId=$uamiId"
           dbIdentity=$(jq -n \
                         --arg uamiId "$uamiId" \
                         '{
