@@ -64,7 +64,9 @@ jobs:
           uamiId: ${{ steps.database-provision.outputs.uamiId }}
           serverHost: ${{ steps.database-provision.outputs.serverHost }}
           dbInstanceName: ${{ env.dbInstanceName }}
-
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
       - name: Set outputs
         run: |
           echo "serverHost=${{ steps.database-provision.outputs.serverHost }}" 
