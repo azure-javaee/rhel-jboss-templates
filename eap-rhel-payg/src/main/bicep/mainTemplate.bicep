@@ -1,5 +1,7 @@
 param guidValue string = take(replace(newGuid(), '-', ''), 6)
 
+param guidTag string = newGuid()
+
 @description('Location for all resources')
 param location string = resourceGroup().location
 
@@ -155,14 +157,16 @@ var linuxConfiguration = {
     ]
   }
 }
-var name_postDeploymentDsName = format('updateNicPrivateIpStatic-{0}', guidValue)
-var name_vmAcceptTerms = format('vmAcceptTerms{0}', guidValue)
-var obj_uamiForDeploymentScript = {
+var name_postDeploymentDsName = format('postdeploymentds{0}', guidValue)
+var const_newVNet = (virtualNetworkNewOrExisting == 'new') ? true : false
+
+var obj_uamiForDeploymentScript = !const_newVNet ? {
   type: 'UserAssigned'
   userAssignedIdentities: {
     '${uamiDeployment.outputs.uamiIdForDeploymentScript}': {}
   }
-}
+} : {}
+var name_vmAcceptTerms = format('vmAcceptTerms{0}', guidValue)
 
 var plan = {
   publisher: 'redhat'
@@ -197,7 +201,7 @@ module partnerCenterPid './modules/_pids/_empty.bicep' = {
   params: {}
 }
 
-module uamiDeployment 'modules/_uami/_uamiAndRoles.bicep' = {
+module uamiDeployment 'modules/_uami/_uamiAndRoles.bicep' = if (!const_newVNet) {
   name: 'uami-deployment-${guidValue}'
   params: {
     guidValue: guidValue
@@ -276,6 +280,17 @@ resource virtualNetworkName_resource 'Microsoft.Network/virtualNetworks@${azure.
   tags: _objTagsByResource['${identifier.virtualNetworks}']
 }
 
+
+resource existingVNet 'Microsoft.Network/virtualNetworks@${azure.apiVersionForVirtualNetworks}' existing = if (!const_newVNet) {
+  name: virtualNetworkName_var.name
+  scope: resourceGroup(virtualNetworkResourceGroupName)
+}
+
+resource existingSubnet 'Microsoft.Network/virtualNetworks/subnets@${azure.apiVersionForVirtualNetworks}' existing = if (!const_newVNet) {
+  parent: existingVNet
+  name: virtualNetworkName_var.subnets.jbossSubnet.name
+}
+
 resource nicName 'Microsoft.Network/networkInterfaces@${azure.apiVersionForNetworkInterfaces}' = {
   name: nicName_var
   location: location
@@ -289,7 +304,7 @@ resource nicName 'Microsoft.Network/networkInterfaces@${azure.apiVersionForNetwo
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets/', virtualNetworkName_var, subnetName)
+            id: const_newVNet ? resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets/', virtualNetworkName_var, subnetName) : existingSubnet.id
           }
           publicIPAddress: {
             id: resourceId('Microsoft.Network/publicIPAddresses', vmPublicIPAddressName)
@@ -300,6 +315,8 @@ resource nicName 'Microsoft.Network/networkInterfaces@${azure.apiVersionForNetwo
   }
   dependsOn: [
     virtualNetworkName_resource
+    vmPublicIP
+    existingSubnet
   ]
   tags: _objTagsByResource['${identifier.networkInterfaces}']
 }
@@ -430,7 +447,7 @@ resource vmName_jbosseap_setup_extension 'Microsoft.Compute/virtualMachines/exte
   tags: _objTagsByResource['${identifier.virtualMachinesExtensions}']
 }
 
-module updateNicPrivateIpStatic 'modules/_deployment-scripts/_dsPostDeployment.bicep' = {
+module postDeployment 'modules/_deployment-scripts/_dsPostDeployment.bicep' = if (!const_newVNet) {
   name: name_postDeploymentDsName
   params: {
     name: name_postDeploymentDsName
@@ -439,12 +456,12 @@ module updateNicPrivateIpStatic 'modules/_deployment-scripts/_dsPostDeployment.b
     _artifactsLocationSasToken: artifactsLocationSasToken
     identity: obj_uamiForDeploymentScript
     resourceGroupName: resourceGroup().name
-    nicName: nicName_var
     tagsByResource: _objTagsByResource
+    guidTag: guidTag
   }
   dependsOn: [
-    nicName
-    uamiDeployment
+    vmName_jbosseap_setup_extension
+
   ]
 }
 
@@ -455,7 +472,7 @@ module dbConnectionEndPid './modules/_pids/_pid.bicep' = if (enableDB) {
   }
   dependsOn: [
     pids
-    vmName_jbosseap_setup_extension
+    postDeployment
   ]
 }
 
@@ -466,6 +483,7 @@ module paygSingleEndPid './modules/_pids/_pid.bicep' = {
   }
   dependsOn: [
     dbConnectionEndPid
+    postDeployment
   ]
 }
 
