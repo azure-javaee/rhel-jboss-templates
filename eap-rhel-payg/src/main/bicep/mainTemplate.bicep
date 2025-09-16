@@ -160,12 +160,12 @@ var linuxConfiguration = {
 var name_postDeploymentDsName = format('postdeploymentds{0}', guidValue)
 var const_newVNet = (virtualNetworkNewOrExisting == 'new') ? true : false
 
-var obj_uamiForDeploymentScript = !const_newVNet ? {
+var obj_uamiForDeploymentScript = {
   type: 'UserAssigned'
   userAssignedIdentities: {
     '${uamiDeployment.outputs.uamiIdForDeploymentScript}': {}
   }
-} : {}
+}
 var name_vmAcceptTerms = format('vmAcceptTerms{0}', guidValue)
 
 var plan = {
@@ -201,7 +201,7 @@ module partnerCenterPid './modules/_pids/_empty.bicep' = {
   params: {}
 }
 
-module uamiDeployment 'modules/_uami/_uamiAndRoles.bicep' = if (!const_newVNet) {
+module uamiDeployment 'modules/_uami/_uamiAndRoles.bicep' = {
   name: 'uami-deployment-${guidValue}'
   params: {
     guidValue: guidValue
@@ -334,6 +334,7 @@ module vmAcceptTerms 'modules/_deployment-scripts/_dsVmAcceptTerms.bicep' =  {
   }
   dependsOn: [
     nicName
+    uamiDeployment
   ]
 }
 
@@ -461,7 +462,7 @@ module postDeployment 'modules/_deployment-scripts/_dsPostDeployment.bicep' = if
   }
   dependsOn: [
     vmName_jbosseap_setup_extension
-
+    uamiDeployment
   ]
 }
 
