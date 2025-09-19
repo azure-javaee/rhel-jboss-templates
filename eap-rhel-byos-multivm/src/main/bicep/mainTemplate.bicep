@@ -592,9 +592,9 @@ resource nicName 'Microsoft.Network/networkInterfaces@${azure.apiVersionForNetwo
               id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', name_appGateway, 'managedNodeBackendPool')
             }
           ]) : null
-          publicIPAddress: const_newVNet ? null : {
+          publicIPAddress: enableAppGWIngress ? {
             id: (operatingMode == name_managedDomain) ? ((i == 0) ? resourceId('Microsoft.Network/publicIPAddresses', '${vmName_var}${name_adminVmName}${name_publicIPAddress}') : resourceId('Microsoft.Network/publicIPAddresses', '${vmName_var}${i}${name_publicIPAddress}')) : resourceId('Microsoft.Network/publicIPAddresses', '${vmName_var}${i}${name_publicIPAddress}')
-          }
+          } : null
         }
       }
     ]
