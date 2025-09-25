@@ -5,11 +5,11 @@ param location string
 param name string = ''
 param identity object = {}
 param resourceGroupName string
-param nicName string
 
 @description('${label.tagsLabel}')
 param tagsByResource object
 param utcValue string = utcNow()
+param guidTag string
 
 var const_scriptLocation = uri(_artifactsLocation, 'scripts/')
 
@@ -26,8 +26,8 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@${azure.apiVers
         value: resourceGroupName
       }
       {
-        name: 'NIC_NAME'
-        value: nicName
+        name: 'GUID_TAG'
+        value: guidTag
       }
     ]
     primaryScriptUri: uri(const_scriptLocation, 'post-deployment.sh${_artifactsLocationSasToken}')
