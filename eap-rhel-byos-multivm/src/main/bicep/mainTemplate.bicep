@@ -219,14 +219,14 @@ var linuxConfiguration = {
   }
 }
 var imageReference = {
-  publisher: 'redhat'
+  publisher: 'Redhat'
   offer: 'rhel-byos'
   sku: ((jdkVersion == 'eap8-openjdk17') || (jdkVersion == 'eap8-openjdk11'))? 'rhel-lvm94-gen2': 'rhel-lvm86-gen2'
   version: 'latest'
 }
 var plan = {
   name: ((jdkVersion == 'eap8-openjdk17') || (jdkVersion == 'eap8-openjdk11'))? 'rhel-lvm94-gen2': 'rhel-lvm86-gen2'
-  publisher: 'redhat'
+  publisher: 'Redhat'
   product: 'rhel-byos'
 }
 

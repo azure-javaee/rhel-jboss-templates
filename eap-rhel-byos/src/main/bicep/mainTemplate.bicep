@@ -343,7 +343,7 @@ resource vmName_resource 'Microsoft.Compute/virtualMachines@${azure.apiVersionFo
   identity: enablePswlessConnection ? dbIdentity : null
   plan: {
     name: ((jdkVersion == 'eap8-openjdk17') || (jdkVersion == 'eap8-openjdk11'))? 'rhel-lvm94-gen2': 'rhel-lvm86-gen2'
-    publisher: 'redhat'
+    publisher: 'Redhat'
     product: 'rhel-byos'
   }
   properties: {
@@ -358,7 +358,7 @@ resource vmName_resource 'Microsoft.Compute/virtualMachines@${azure.apiVersionFo
     }
     storageProfile: {
       imageReference: {
-        publisher: 'redhat'
+        publisher: 'Redhat'
         offer: 'rhel-byos'
         sku: ((jdkVersion == 'eap8-openjdk17') || (jdkVersion == 'eap8-openjdk11'))? 'rhel-lvm94-gen2': 'rhel-lvm86-gen2'
         version: 'latest'
